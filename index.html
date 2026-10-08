@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frostway</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game"></canvas>
+
+      <div id="hud" class="hidden">
+        <div class="top-bar">
+          <div class="bar hp-bar">
+            <div id="hp-fill" class="fill"></div>
+            <span id="hp-text">100 / 100</span>
+          </div>
+          <div id="timer" class="timer">04:00</div>
+          <div id="phase-name" class="phase-name">Fase 1 · Caracol</div>
+        </div>
+
+        <div id="kill-feed" class="kill-feed"></div>
+
+        <div id="skill-bar" class="skill-bar"></div>
+
+        <button id="mute" class="mute-button" title="Som (M)">🔊</button>
+
+        <div class="minimap-frame">
+          <div id="minimap-title" class="minimap-title">Fase 1</div>
+          <canvas id="minimap" width="200" height="140"></canvas>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div id="respawn" class="respawn hidden">
+          <b>Você morreu</b>
+          <span id="respawn-text"></span>
+        </div>
+
+        <div id="victory" class="victory hidden">
+          <b>Vitória!</b>
+          <span id="victory-text"></span>
+          <small>Esc: menu</small>
+        </div>
+      </div>
+
+      <div id="overlay">
+        <section id="menu" class="panel">
+          <h1>Frostway</h1>
+          <p class="subtitle">Atravesse o caminho de gelo antes que o tempo acabe.</p>
+          <button id="play">Jogar sozinho</button>
+          <button id="play-bots">Jogar contra bots</button>
+          <button id="play-online">Jogar online</button>
+          <button id="open-character" class="secondary">Personagem</button>
+          <div class="sound-settings">
+            <label>Música <input id="music-volume" type="range" min="0" max="100" /></label>
+            <label>Efeitos <input id="sfx-volume" type="range" min="0" max="100" /></label>
+          </div>
+          <ul class="controls">
+            <li><b>Clique esquerdo</b>: andar (segure para seguir o mouse)</li>
+            <li><b>1 a 6</b>: escolhe a magia · <b>Clique direito</b>: lança a magia na direção do mouse</li>
+            <li>Magias: Gancho, Cura, Rajada, Fumaça, Fogo e Marca. Projéteis acertam qualquer um, até o próprio time.</li>
+            <li><b>Esc</b>: voltar ao menu · <b>M</b>: liga/desliga o som</li>
+          </ul>
+          <ul class="rules">
+            <li><b>Fase 1</b>: caracol. O gelo do chão cresce depois da 2ª curva; depois da 4ª, lâminas saem das paredes.</li>
+            <li><b>Fase 2</b>: zigue-zague com 3 portais no fim. Só um é o certo (leva à dungeon), sorteado a cada partida; o errado manda de volta ao início da fase 2.</li>
+            <li>O gelo do chão deixa você mais lento; o gelo da parede empurra e também deixa lento.</li>
+            <li>Morrer devolve você ao início da fase em que está. O tempo vale para as duas fases.</li>
+          </ul>
+        </section>
+
+        <section id="character" class="panel wide hidden">
+          <h1>Personagem</h1>
+          <div class="character-editor">
+            <canvas id="character-preview" width="200" height="240"></canvas>
+            <div class="character-options">
+              <label class="option-row">
+                <span>Nome</span>
+                <input id="char-name" maxlength="16" autocomplete="off" />
+              </label>
+              <div class="option-row"><span>Corpo</span><div id="char-body" class="choices"></div></div>
+              <div class="option-row"><span>Roupa</span><div id="char-outfit" class="swatches"></div></div>
+              <div class="option-row"><span>Calça</span><div id="char-pants" class="swatches"></div></div>
+              <div class="option-row"><span>Pele</span><div id="char-skin" class="swatches"></div></div>
+              <div class="option-row"><span>Olhos</span><div id="char-eyes" class="swatches"></div></div>
+              <div class="option-row"><span>Cor do cabelo</span><div id="char-hair" class="swatches"></div></div>
+              <div class="option-row"><span>Penteado</span><div id="char-hair-style" class="choices"></div></div>
+              <div class="option-row"><span>Barba</span><div id="char-beard" class="choices"></div></div>
+              <div class="option-row"><span>Cabeça</span><div id="char-headwear" class="choices"></div></div>
+              <div class="option-row"><span>Capa</span><div id="char-cape" class="choices"></div></div>
+              <div class="option-row"><span>Cor da capa e da bandana</span><div id="char-accent" class="swatches"></div></div>
+              <div class="option-row"><span>Arma</span><div id="char-weapon" class="choices"></div></div>
+            </div>
+          </div>
+          <button id="character-done">Pronto</button>
+        </section>
+
+        <section id="online-rooms" class="panel wide hidden">
+          <h1>Salas online</h1>
+          <p id="online-status" class="subtitle">Conectando...</p>
+          <div class="room-list-wrap">
+            <table class="room-list">
+              <thead>
+                <tr><th>Nome</th><th>Jogadores</th><th>Status</th></tr>
+              </thead>
+              <tbody id="room-list"></tbody>
+            </table>
+            <p id="rooms-empty" class="muted">Nenhuma sala aberta. Crie a primeira!</p>
+          </div>
+          <p id="online-error" class="error hidden"></p>
+          <div class="button-row">
+            <button id="create-room">Criar sala</button>
+            <button id="refresh-rooms" class="secondary">Atualizar</button>
+            <button id="online-back" class="secondary">Voltar</button>
+          </div>
+        </section>
+
+        <section id="online-create" class="panel hidden">
+          <h1>Criar sala</h1>
+          <form id="create-form">
+            <input id="room-name" class="text-input" maxlength="40" autocomplete="off" placeholder="Nome da sala" />
+            <button type="submit">Criar</button>
+            <button type="button" id="create-cancel" class="secondary">Cancelar</button>
+          </form>
+        </section>
+
+        <section id="online-room" class="panel wide hidden">
+          <h1 id="room-title">Sala</h1>
+          <div id="teams" class="teams"></div>
+          <div class="room-settings">
+            <label>Tamanho do time
+              <select id="team-size">
+                <option value="1">Solo</option>
+                <option value="2">Dupla</option>
+                <option value="3">Trio</option>
+              </select>
+            </label>
+            <label>Tempo
+              <select id="time-limit">
+                <option value="180">3 min</option>
+                <option value="300">5 min</option>
+                <option value="600">10 min</option>
+                <option value="1200">20 min</option>
+              </select>
+            </label>
+            <label>Bots
+              <select id="bot-count">
+                <option value="0">Nenhum</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </label>
+          </div>
+          <div class="button-row">
+            <button id="start-stop">Iniciar partida</button>
+            <button id="leave-room" class="secondary">Sair da sala</button>
+          </div>
+        </section>
+
+        <section id="result" class="panel hidden">
+          <h1 id="result-title">Vitória!</h1>
+          <p id="result-text" class="subtitle"></p>
+          <button id="play-again">Jogar de novo</button>
+          <button id="back-to-menu" class="secondary">Menu</button>
+        </section>
+      </div>
+      <section id="chat" class="chat hidden">
+        <div id="chat-log" class="chat-log"></div>
+        <input id="chat-input" maxlength="140" autocomplete="off" placeholder="Enter para conversar" />
+      </section>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
