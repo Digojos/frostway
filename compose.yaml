@@ -1,0 +1,11 @@
+services:
+  frostway:
+    build: .
+    image: frostway:latest
+    container_name: frostway
+    ports:
+      # Behind a reverse proxy, set BIND_ADDRESS=127.0.0.1 so the port is only reachable through it.
+      - "${BIND_ADDRESS:-0.0.0.0}:${HOST_PORT:-5180}:5180"
+    environment:
+      PORT: 5180
+    restart: unless-stopped

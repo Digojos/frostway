@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.gitignore
+.dockerignore
+.claude
+Dockerfile
+compose.yaml
+docs
+*.md
+!public/**/*.md
+*.log
+.env
